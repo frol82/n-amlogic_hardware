@@ -1,0 +1,123 @@
+# Build list
+
+targetList := drivers
+
+default: ${targetList}
+
+#################################################################################################################################
+export SIGMADUT_TOPDIR=${ATH_TOPDIR}/apps/sigma-dut
+export DRIVER_TOPDIR=$(ATH_TOPDIR)/drivers
+export APP_TOPDIR=$(ATH_TOPDIR)/apps
+export ATHDIAG_TOPDIR=${ATH_TOPDIR}/drivers/qcacld-new/tools/athdiag
+export ROOTFS_PATH=${ATH_TOPDIR}/rootfs-${BOARD_TYPE}.build
+
+export BSP_PATCH_TOPDIR=$(ATH_TOPDIR)/drivers/patches/android_bsp_patch/rome-usb-ax86-l
+#################################################################################################################################
+#
+# driver patch
+#
+
+drivers_patch:
+	@echo Patch drivers
+	@cd ${DRIVER_TOPDIR} && patch -s -p0 < ${DRIVER_TOPDIR}/patches/001-cfg80211-backports-3.12.8-1.patch
+	@cd ${DRIVER_TOPDIR} && patch -s -p1 < patches/${BOARD_TYPE}/001-cfg80211-backports-3.12.8_naples.patch
+	@echo Patch wpa_supplicant_8
+	@cd ${DRIVER_TOPDIR}/../apps/ && patch -s -p0 < ${DRIVER_TOPDIR}/patches/002-wpa_supplicant-for-aio.patch
+	@cd ${WPA_SUPPLICANT_TOPDIR} && cp wpa_supplicant/android.config wpa_supplicant/.config
+	@cd ${WPA_SUPPLICANT_TOPDIR} && cp hostapd/android.config hostapd/.config
+	@echo Patch BT USB
+	@cd ${APP_TOPDIR}/bluedroid && patch -s -p1 < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/BT/Naples-bluedroid.patch
+	@cd ${APP_TOPDIR}/bt && patch -s -p1 < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/BT/Naples-bt.patch
+	@cd ${DRIVER_TOPDIR}/btusb/linux/SS1BTUSB && patch -s -p1 < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/BT/Naples-SS1BTUSB.patch
+
+
+drivers_patch_R:
+	@echo Revert drivers patch
+	@cd ${DRIVER_TOPDIR} && patch -s -R -p1 < patches/${BOARD_TYPE}/001-cfg80211-backports-3.12.8_naples.patch
+	@cd ${DRIVER_TOPDIR} && patch -s -R -p0 < ${DRIVER_TOPDIR}/patches/001-cfg80211-backports-3.12.8-1.patch
+	@echo Revert wpa_supplicant_8 patch
+	@cd ${DRIVER_TOPDIR}/../apps/ && patch -s -R -p0 < ${DRIVER_TOPDIR}/patches/002-wpa_supplicant-for-aio.patch
+	@cd ${WPA_SUPPLICANT_TOPDIR} && rm wpa_supplicant/.config
+	@cd ${WPA_SUPPLICANT_TOPDIR} && rm hostapd/.config
+	@echo Revert BT patch
+	@cd ${APP_TOPDIR}/bluedroid && git stash && git clean -fd
+	@cd ${APP_TOPDIR}/bt && git stash && git clean -fd
+	@cd ${DRIVER_TOPDIR}/btusb/linux && git stash && git clean -fd
+
+android_patch: btusb_patch
+	@echo Patch Android-x86 BSP
+	@mkdir -p ${ANDROID_X86_PROJ_PATH}/out/target/product/x86/system/etc
+	cd ${ANDROID_X86_PROJ_PATH}/device/generic/common && patch -p1 --no-backup-if-mismatch < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/WLAN/0001.WL-device.patch
+	cd ${ANDROID_X86_PROJ_PATH}/device/generic/common && patch -p1 --no-backup-if-mismatch < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/BT/0001.BT-device.patch
+	cd ${ANDROID_X86_PROJ_PATH} && patch -p1 --no-backup-if-mismatch < ${BSP_PATCH_TOPDIR}/WLAN/0002.WL-frameworks.patch
+	cd ${ANDROID_X86_PROJ_PATH} && patch -p1 --no-backup-if-mismatch < ${BSP_PATCH_TOPDIR}/WLAN/0003.WL-hardware.patch
+	cd ${ANDROID_X86_PROJ_PATH}/kernel && patch -p1 --no-backup-if-mismatch < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/WLAN/0004.WL-kernel.patch
+	cd ${ANDROID_X86_PROJ_PATH}/kernel && patch -p1 --no-backup-if-mismatch < ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/BT/0004.BT-kernel.patch
+	cd ${ANDROID_X86_PROJ_PATH} && patch -p1 --no-backup-if-mismatch < ${BSP_PATCH_TOPDIR}/WLAN/0005.WL-3.10-kernel-tcp-rx-tput-fix.patch
+	cd ${ANDROID_X86_PROJ_PATH} && patch -p1 --no-backup-if-mismatch < ${BSP_PATCH_TOPDIR}/WLAN/0006.WL-wlan_recovery_support.patch
+	cp ${BSP_PATCH_TOPDIR}/WLAN/sysctl.conf ${ANDROID_X86_PROJ_PATH}/out/target/product/x86/system/etc/
+	@echo Copy PATCH DONE!
+
+
+android_patch_R:
+	cd ${ANDROID_X86_PROJ_PATH}/device/generic/common && git stash
+	cd ${ANDROID_X86_PROJ_PATH}/frameworks/base && git stash
+	cd ${ANDROID_X86_PROJ_PATH}/hardware/libhardware_legacy && git stash
+	cd ${ANDROID_X86_PROJ_PATH}/kernel && git stash
+	cd ${ANDROID_X86_PROJ_PATH}/system/core && git stash
+
+btusb_patch:
+	@echo Bluedroid prepare
+	rm -rf  ${ANDROID_X86_PROJ_PATH}/external/bluetooth/bluez
+	cp -rf ${APP_TOPDIR}/bluedroid ${ANDROID_X86_PROJ_PATH}/external/bluetooth/
+	mkdir -p ${ANDROID_X86_PROJ_PATH}/hardware/qcom
+	cp -rf ${APP_TOPDIR}/bt ${ANDROID_X86_PROJ_PATH}/hardware/qcom/
+	cp -rf ${DRIVER_TOPDIR}/btusb/linux/SS1BTUSB/SS1BTUSB.c ${ANDROID_X86_PROJ_PATH}/kernel/drivers/usb/misc/
+	cp -rf ${DRIVER_TOPDIR}/btusb/linux/SS1BTUSB/SS1BTUSB.h ${ANDROID_X86_PROJ_PATH}/kernel/drivers/usb/misc/
+	cp -rf ${DRIVER_TOPDIR}/patches/${BOARD_TYPE}/BT/*.h ${ANDROID_X86_PROJ_PATH}/hardware/libhardware/include/hardware/
+
+
+#################################################################################################################################
+#
+# Sigma-DUT package
+#
+sigmadut_build: rootfs_prep sigmadut_clean
+	@echo Build Sigma-DUT
+	cd $(SIGMADUT_TOPDIR) && \
+	${MAKEARCH} && \
+	cp $(SIGMADUT_TOPDIR)/sigma_dut $(INSTALL_ROOT)/sbin
+
+sigmadut_clean:
+	@echo Clean Sigma-DUT
+	cd $(SIGMADUT_TOPDIR) && \
+	${MAKEARCH} clean
+
+#################################################################################################################################
+#
+# athdiag
+#
+athdiag_build: rootfs_prep athdiag_clean
+	@echo Build athdiag tool
+	cd $(ATHDIAG_TOPDIR) && \
+	${MAKEARCH} && \
+	cp $(ATHDIAG_TOPDIR)/athdiag $(INSTALL_ROOT)/sbin
+
+athdiag_clean:
+	@echo Clean athdiag tool
+	cd $(ATHDIAG_TOPDIR) && \
+	${MAKEARCH} clean
+
+#
+#strip wlan module & copy binary files to Android-x86 project
+#
+install:
+	@echo Strip Unneeded for WLAN Module first
+	cd ${ROOTFS_PATH}/lib/modules && ${CROSS_COMPILE}strip --strip-unneeded *
+	@echo Copy BINARY to Android-x86 project
+	cp ${ROOTFS_PATH}/lib/modules/* ${ANDROID_X86_PROJ_VENDOR_PATH}
+	cp -rf ${ROOTFS_PATH}/lib/firmware/WLAN-firmware/*  ${ANDROID_X86_PROJ_WLANFW_PATH}
+	mkdir -p ${ANDROID_X86_PROJ_WLAN_PATH}
+	cp ${ROOTFS_PATH}/lib/firmware/wlan/* ${ANDROID_X86_PROJ_WLAN_PATH}
+	mkdir -p ${ANDROID_X86_PROJ_BTFW_PATH}
+	cp -rf ${ROOTFS_PATH}/lib/firmware/BT-firmware/* ${ANDROID_X86_PROJ_BTFW_PATH}
+	@echo Copy BINARY DONE!

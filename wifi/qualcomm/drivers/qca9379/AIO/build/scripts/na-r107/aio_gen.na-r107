@@ -1,0 +1,70 @@
+#!/bin/bash
+# Add na-r207c1 specific patches
+
+# subverion
+BRD_TYPE_VER=na-r107
+
+#
+# For each board type,
+# determine which components should be downloaded.
+# The settings here will overwrite the default in aio_gen_bit.sh.
+#
+# ONLY add/enable those components need download.
+#
+# 1. patch files
+DOWNLOAD_PATCH=y
+
+# 2. kernel
+DOWNLOAD_KERNEL_BACKPORT_3_12=y
+
+# 3. WLAN/BT host drivers
+DOWNLOAD_DRIVER_WLAN_HOST=y
+
+# 4. APPs
+DOWNLOAD_APP_WLAN_WPA_SUPPLICANT_8=y
+DOWNLOAD_APP_WLAN_LIBNL_3_2_25=y
+DOWNLOAD_BLUEDROID=y
+DOWNLOAD_QCOM_BT=y
+DOWNLOAD_BT_USB_DRIVER=y
+
+
+OLD_DIR=`pwd`
+
+if [ ${DOWNLOAD_BLUEDROID} == "y" ]
+then
+    echo "========================================================"
+    echo " Downloading bluedroid ..."
+    echo "========================================================"
+    cd ${AIO_TOP}/apps
+    git clone https://source.codeaurora.org/quic/la/platform/external/bluetooth/bluedroid -b aosp-new/lollipop-release
+    cd bluedroid
+    git checkout -b aio_build 97204af05941a3dbbc0a2f6d49457c3ace5f7f86 
+fi
+
+if [ ${DOWNLOAD_QCOM_BT} == "y" ]
+then
+    echo "========================================================"
+    echo " Downloading QCOM BT ..."
+    echo "========================================================"
+    cd ${AIO_TOP}/apps
+    git clone git://codeaurora.org/quic/la/platform/hardware/qcom/bt -b LNX.LA.3.6.1.c4
+    cd bt
+    git checkout -b aio_build 34f2d1adb3c50022d5f78d10791057b4209a21b7
+fi
+
+
+if [ ${DOWNLOAD_QCOM_BT} == "y" ]
+then
+    echo "========================================================"
+    echo " Downloading BT USB driver ..."
+    echo "========================================================"
+    mkdir -p ${AIO_TOP}/drivers/btusb
+    cd ${AIO_TOP}/drivers/btusb
+    git clone https://source.codeaurora.org/external/bluetopia-drivers/linux
+    cd linux
+    git checkout -b aio_build 241d5dddde1928430613215166fce1794309fbfd
+fi
+cd ${OLD_DIR}
+
+
+

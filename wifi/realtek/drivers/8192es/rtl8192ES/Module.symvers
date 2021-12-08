@@ -1,0 +1,5 @@
+0x00000000	rtw_disable_gpio_interrupt	/home/xaldey/n-amlogic/hardware/wifi/realtek/drivers/8192es/rtl8192ES/8192es	EXPORT_SYMBOL
+0x00000000	rtw_register_gpio_interrupt	/home/xaldey/n-amlogic/hardware/wifi/realtek/drivers/8192es/rtl8192ES/8192es	EXPORT_SYMBOL
+0x00000000	rtw_config_gpio	/home/xaldey/n-amlogic/hardware/wifi/realtek/drivers/8192es/rtl8192ES/8192es	EXPORT_SYMBOL
+0x00000000	rtw_get_gpio	/home/xaldey/n-amlogic/hardware/wifi/realtek/drivers/8192es/rtl8192ES/8192es	EXPORT_SYMBOL
+0x00000000	rtw_set_gpio_output_value	/home/xaldey/n-amlogic/hardware/wifi/realtek/drivers/8192es/rtl8192ES/8192es	EXPORT_SYMBOL

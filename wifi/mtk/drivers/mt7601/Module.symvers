@@ -1,0 +1,3 @@
+0x00000000	RTMPQMemAddr	/home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mtprealloc	EXPORT_SYMBOL
+0x00000000	rausb_autopm_get_interface	/home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mt7601usta	EXPORT_SYMBOL
+0x00000000	rausb_autopm_put_interface	/home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mt7601usta	EXPORT_SYMBOL

@@ -1,0 +1,12 @@
+#ifndef GRALLOC_USAGE_EXT_H
+#define GRALLOC_USAGE_EXT_H
+
+/* gralloc usage extensions */
+enum {
+    GRALLOC_USAGE_AML_VIDEO_OVERLAY     = 0x01000000,
+    GRALLOC_USAGE_AML_DMA_BUFFER        = 0x02000000,
+    GRALLOC_USAGE_AML_OMX_OVERLAY       = 0x04000000,
+    GRALLOC_USAGE_AML_SECURE            = 0x08000000,
+};
+
+#endif /* GRALLOC_USAGE_EXT_H */

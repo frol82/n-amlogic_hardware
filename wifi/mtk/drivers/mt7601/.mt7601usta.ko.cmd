@@ -1,0 +1,1 @@
+cmd_/home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mt7601usta.ko := aarch64-linux-gnu-ld -EL -r  -T /home/work/xiezx/git/common/scripts/module-common.lds --build-id  -o /home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mt7601usta.ko /home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mt7601usta.o /home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7601/mt7601usta.mod.o

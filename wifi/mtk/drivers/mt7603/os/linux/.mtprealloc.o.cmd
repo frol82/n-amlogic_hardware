@@ -1,0 +1,1 @@
+cmd_/home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7603/os/linux/mtprealloc.o := aarch64-linux-gnu-ld    -r -o /home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7603/os/linux/mtprealloc.o /home/work/xiezx/git/hardware/wifi/mtk/drivers/mt7603/os/linux/prealloc.o 

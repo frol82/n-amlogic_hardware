@@ -1,0 +1,51 @@
+#!/bin/bash
+# Add r32a-r103 specific patches
+
+# subverion
+BRD_TYPE_VER=r32a-r103
+
+#
+# For each board type,
+# determine which components should be downloaded.
+# The settings here will overwrite the default in aio_gen_bit.sh.
+# 
+# ONLY add/enable those components need download.
+#
+# 1. patch files
+DOWNLOAD_PATCH=y
+
+# 2. kernel
+DOWNLOAD_KERNEL_BACKPORT_3_12=y
+
+# 3. WLAN/BT host drivers
+DOWNLOAD_DRIVER_WLAN_HOST=n
+
+# 4. APPs
+DOWNLOAD_APP_WLAN_WPA_SUPPLICANT_8=y
+DOWNLOAD_APP_WLAN_LIBNL_3_2_25=y
+
+CFG80211_VERSION="v3.18.1"
+CFG80211_BASE_NAME="backports-3.18.1-1"
+
+
+
+#### use git to download the WLAN host drivers
+
+git clone git://codeaurora.org/quic/la/platform/vendor/qcom-opensource/wlan/qcacld-2.0
+cd qcacld-2.0 && git checkout -b  LA.BR.1.3.3.c2  origin/LA.BR.1.3.3.c2 && git reset --hard 2fe7b052bc6877c6bd112943dbec4813c8b3c03b && cd ..
+mv  qcacld-2.0 ${AIO_TOP}/drivers/qcacld-new
+echo "qcacld driver download done"
+
+
+#### Download backports patches from CAF
+PATCH_PATH=${AIO_TOP}/drivers/patches/${BRD_TYPE_VER}
+mkdir -p ${PATCH_PATH}
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/patch/?id=504152d28e36e815ad076c20e3fd8e279789a0d1 -O ${PATCH_PATH}/0001-cfg80211-Add-AP-stopped-interface.patch
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/patch/?id=4392e1b1f1a60651065e271a0facbcd1ae47f0c3 -O ${PATCH_PATH}/0002-cfg80211-Reset-beacon-interval-when-stop-AP-fails.patch
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/patch/?id=4df810901c1fae517181dd2df965ab3672a36d5f -O ${PATCH_PATH}/0003-Revert-cfg80211-mac80211-disconnect-on-suspend.patch
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/patch/?id=8dd59f4306c6dd309b976e64be82a83ab624a40f -O ${PATCH_PATH}/0004-cfg80211-Add-new-wiphy-flag-WIPHY_FLAG_DFS_OFFLOAD.patch
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/patch/?id=0e078ec39e55d7791db7835c0b83fb0547286e5d -O ${PATCH_PATH}/0005-cfg80211-export-regulatory_hint_user-API.patch
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/patch/?id=389b3f4f0d3202fc9cf36713599f19b7e9919fa1 -O ${PATCH_PATH}/0006-mac80211-implement-HS2.0-gratuitous-ARP-unsolicited.patch
+wget https://source.codeaurora.org/quic/la/kernel/msm-3.18/plain/net/wireless/db.txt  -O ${PATCH_PATH}/0007-add-db.txt
+
+echo "backports 3.18 patches download done"
